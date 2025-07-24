@@ -16,7 +16,10 @@ func ParseDevice(device string) (string, string, string, error) {
 	switch len(arr) {
 	case 3:
 		if !IsValidDeviceMode(arr[2]) {
-			return "", "", "", fmt.Errorf("invalid device mode: %s", arr[2])
+			if arr[2] == "" {
+				return "", "", "", fmt.Errorf("in device mapping %q: device mode cannot be empty. Either omit the second : or specify a valid device mode (combination of r, w, m)", device)
+			}
+			return "", "", "", fmt.Errorf("in device mapping %q: invalid device mode %q. Valid device modes are combinations of r (read), w (write), and m (mknod)", device, arr[2])
 		}
 		permissions = arr[2]
 		fallthrough
@@ -25,7 +28,10 @@ func ParseDevice(device string) (string, string, string, error) {
 			permissions = arr[1]
 		} else {
 			if len(arr[1]) > 0 && arr[1][0] != '/' {
-				return "", "", "", fmt.Errorf("invalid device mode: %s", arr[1])
+				if arr[1] == "" {
+					return "", "", "", fmt.Errorf("in device mapping %q: device mode cannot be empty. Either omit the : or specify a valid device mode (combination of r, w, m)", device)
+				}
+				return "", "", "", fmt.Errorf("in device mapping %q: invalid device mode %q. Valid device modes are combinations of r (read), w (write), and m (mknod)", device, arr[1])
 			}
 			dst = arr[1]
 		}
@@ -33,7 +39,7 @@ func ParseDevice(device string) (string, string, string, error) {
 	case 1:
 		src = arr[0]
 	default:
-		return "", "", "", fmt.Errorf("invalid device specification: %s", device)
+		return "", "", "", fmt.Errorf("invalid device specification: %q. Expected format: /host/path[:/container/path[:mode]]", device)
 	}
 
 	if dst == "" {

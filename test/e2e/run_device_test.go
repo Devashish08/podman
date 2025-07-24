@@ -82,7 +82,13 @@ var _ = Describe("Podman run device", func() {
 	It("podman run device rename and bad permission test", func() {
 		session := podmanTest.Podman([]string{"run", "-q", "--security-opt", "label=disable", "--device", "/dev/kmsg:/dev/kmsg1:rd", ALPINE, "true"})
 		session.WaitWithDefaultTimeout()
-		Expect(session).Should(ExitWithError(125, "invalid device mode: rd"))
+		Expect(session).Should(ExitWithError(125, "in device mapping \"/dev/kmsg:/dev/kmsg1:rd\": invalid device mode \"rd\". Valid device modes are combinations of r (read), w (write), and m (mknod)"))
+	})
+
+	It("podman run device with empty permission test", func() {
+		session := podmanTest.Podman([]string{"run", "-q", "--security-opt", "label=disable", "--device", "/dev/fuse::", ALPINE, "true"})
+		session.WaitWithDefaultTimeout()
+		Expect(session).Should(ExitWithError(125, "in device mapping \"/dev/fuse::\": device mode cannot be empty. Either omit the second : or specify a valid device mode (combination of r, w, m)"))
 	})
 
 	It("podman run device host device and container device parameter are directories", func() {
